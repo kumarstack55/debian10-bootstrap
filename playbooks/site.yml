@@ -1,0 +1,49 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+    - name: Test squashfs-root/usr/bin/nvim exists
+      stat:
+        path: "{{ ansible_env.HOME }}/squashfs-root/usr/bin/nvim"
+      register: result_stat_nvim
+
+    - name: Download nvim.appimage
+      get_url:
+        url: https://github.com/neovim/neovim/releases/download/stable/nvim.appimage
+        dest: "{{ ansible_env.HOME }}/nvim.appimage"
+      when: not result_stat_nvim.stat.exists
+
+    - name: Extract nvim.appimage
+      shell: cd $HOME; ./nvim.appimage --appimage-extract
+      when: not result_stat_nvim.stat.exists
+
+    - name: Remove nvim.appimage
+      file:
+        path: "{{ ansible_env.HOME }}/nvim.appimage"
+        state: absent
+
+    - name: Ensure directory bin exists
+      file:
+        path: "{{ ansible_env.HOME }}/bin"
+        state: directory
+
+    - name: Ensure nvim link exists
+      file:
+        path: "{{ ansible_env.HOME }}/bin/nvim"
+        state: link
+        src: "{{ ansible_env.HOME }}/squashfs-root/usr/bin/nvim"
+
+    - name: Ensure tmux installed
+      become: yes
+      apt:
+        name: tmux
+
+    - name: Ensure pip3 installed
+      become: yes
+      apt:
+        name: python3-pip
+
+    - name: Ensure locales-all installed
+      become: yes
+      apt:
+        name: locales-all
