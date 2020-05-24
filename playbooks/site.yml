@@ -47,3 +47,8 @@
       become: yes
       apt:
         name: locales-all
+
+    - name: Ensure jq installed
+      become: yes
+      apt:
+        name: jq
